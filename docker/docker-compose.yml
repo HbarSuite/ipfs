@@ -1,0 +1,32 @@
+name: ipfs
+
+services:
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: node
+    ports:
+      - "4001:4001"  # swarm listening port
+      - "5001:5001"  # API port
+      - "8080:8080"  # Gateway port
+    environment:
+      - IPFS_GATEWAY=true
+      - IPFS_API=true
+      - IPFS_MIGRATION_ACTIVE=true    
+      - IPFS_GATEWAY_SUBDOMAIN=true
+      - IPFS_PROFILE=server    
+    volumes:
+      - ipfs-data:/data/ipfs
+    networks:
+      smart_node_ipfs:      
+    restart: unless-stopped
+
+networks:
+  smart_node_ipfs:
+    name: smart_node_ipfs
+  smart_node_network:
+    name: smart_node_network    
+    external: true
+
+volumes:
+    smart_node_ipfs:
+    ipfs-data:
