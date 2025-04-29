@@ -98,7 +98,7 @@ export class IpfsController {
   @ApiResponse({ status: 404, description: 'IPFS.Read.Content.Error.NotFound' })
   async readContent(@Param('cid') cid: string) {
     try {
-      return await this.ipfsService.get(cid);
+      return (await this.ipfsService.get(cid)).data;
     } catch (error) {
       throw new BadRequestException(error.message);
     }

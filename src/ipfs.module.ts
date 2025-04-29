@@ -37,6 +37,7 @@ import { IPFS } from './types/models/ipfs.models.namespace';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IIPFS } from './types';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Module({})
 export class IpfsModule {
@@ -74,9 +75,10 @@ export class IpfsModule {
           useFactory: (
             httpService: HttpService, 
             pinModel: Model<IPFS.PinDocument>, 
-            options: IIPFS.IOptions
-          ) => new IPFS.Node(pinModel, options, httpService),
-          inject: [HttpService, getModelToken(IPFS.Pin.name), 'ipfsOptions'],
+            options: IIPFS.IOptions,
+            eventEmitter: EventEmitter2
+          ) => new IPFS.Node(pinModel, options, httpService, eventEmitter),
+          inject: [HttpService, getModelToken(IPFS.Pin.name), 'ipfsOptions', EventEmitter2],
         },
         {
           provide: 'IPFS_GATEWAY', 

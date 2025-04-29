@@ -1,6 +1,6 @@
 {
     "name": "@hsuite/ipfs",
-    "version": "2.0.0",
+    "version": "2.0.5",
     "main": "index.js",
     "types": "index.d.ts",
     "isPublic": true,
@@ -18,5 +18,10 @@
     },
     "devDependencies": {
       "@compodoc/compodoc": "^1.1.23"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/HbarSuite/ipfs.git",
+        "directory": "libs/ipfs"
     }
   }

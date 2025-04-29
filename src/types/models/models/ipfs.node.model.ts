@@ -1,6 +1,6 @@
 import { create as createIPFSClient, IPFSHTTPClient } from 'ipfs-http-client'
 import { IIPFS } from "../../interfaces/ipfs.interface.namespace";
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { _Base } from './ipfs.base.model';
@@ -9,6 +9,8 @@ import { IAuth } from '@hsuite/auth-types';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { _Pin, _PinDocument } from './ipfs.pin.model';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { LoggerHelper } from '@hsuite/helpers';
 
 /**
  * Node implementation for IPFS access
@@ -45,8 +47,7 @@ export class _Node extends _Base implements IIPFS.INode, OnModuleInit {
      * Logger instance for the Node class
      * Provides structured logging for node operations
      * 
-     * @private
-     * @type {Logger}
+     * @type {LoggerHelper}
      * @description
      * Logger that:
      * - Records operational events
@@ -54,7 +55,7 @@ export class _Node extends _Base implements IIPFS.INode, OnModuleInit {
      * - Aids in debugging
      * - Follows NestJS logging patterns
      */
-    private logger: Logger = new Logger(_Node.name);
+    private logger: LoggerHelper = new LoggerHelper(_Node.name);
 
     /**
      * IPFS HTTP client instance
@@ -88,7 +89,8 @@ export class _Node extends _Base implements IIPFS.INode, OnModuleInit {
     constructor(
         @InjectModel(_Pin.name) private pinModel: Model<_PinDocument>,
         @Inject('ipfsOptions') private options: IIPFS.IOptions,
-        private httpService: HttpService
+        private httpService: HttpService,
+        private eventEmitter: EventEmitter2
     ) {
         super();
     }
@@ -288,20 +290,48 @@ export class _Node extends _Base implements IIPFS.INode, OnModuleInit {
             const result = await this.client.add(Buffer.from(content));
             const cid = result.cid.toString();
 
-            await this.pinModel.create({
+            const pin: _PinDocument = await this.pinModel.create({
                 cid: cid,
                 owner: owner.walletId,
                 timestamp: Date.now()
             });
 
             if (broadcast) {
-                // TODO: Broadcast to network
-                // this.eventEmitter.emit('ipfs:write', content);
+                this.eventEmitter.emit('ipfs:write', {
+                    content: content,
+                    owner: owner
+                });
             }
 
             return cid;
         } catch (error) {
             throw error;
+        }
+    }
+
+    /**
+     * Handles IPFS broadcast write events
+     * Pins content without broadcasting
+     * 
+     * @param {Object} payload - The IPFS write payload
+     * @param {string} payload.content - The content to pin
+     * @param {IAuth.ICredentials.IWeb3.IEntity} payload.owner - The owner credentials
+     * @returns {Promise<boolean>} Whether the pin was successful
+     * @throws {Error} When content cannot be pinned
+     * @description
+     * Pinning process that:
+     * - Pins content without broadcasting
+     * - Returns CID of pinned content  
+     */
+    @OnEvent('ipfs:broadcast:write')
+    async handleIpfsBroadcastWrite(payload: {
+        content: string,
+        owner: IAuth.ICredentials.IWeb3.IEntity
+    }) {
+        try {
+            await this.pin(payload.content, payload.owner, false);
+        } catch(error) {
+            return false;
         }
     }
 

@@ -11,3 +11,12 @@ All notable changes to this project will be documented in this file.
 - Changed: package.json
 - Changed: src/
 - Changed: tsconfig.lib.json
+
+## [2.0.5] - 2025-04-29
+
+- Modified: docker/docker-compose.yml
+- Modified: package.json
+- Modified: src/ipfs.controller.ts
+- Modified: src/ipfs.module.ts
+- Modified: src/ipfs.service.ts
+- Modified: src/types/models/models/ipfs.node.model.ts

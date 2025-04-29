@@ -1,9 +1,10 @@
-import { Inject, Injectable, Logger } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { IPFS } from './types';
 import core from 'file-type/core';
 import { IAuth } from '@hsuite/auth-types';
 import { Readable } from 'stream';
 import { Multer } from 'multer';
+import { LoggerHelper } from '@hsuite/helpers';
 
 type NewType = IAuth.ICredentials.IWeb3.IEntity;
 
@@ -22,10 +23,16 @@ type NewType = IAuth.ICredentials.IWeb3.IEntity;
  */
 @Injectable()
 export class IpfsService {
-  /** Logger instance for the IpfsService class */
-  protected logger: Logger = new Logger(IpfsService.name);
+  /**
+   * Logger instance for the service
+   * @type {LoggerHelper}
+   */
+  protected logger: LoggerHelper = new LoggerHelper(IpfsService.name);
   
-  /** Map of IPFS providers (node and gateway) */
+  /**
+   * Map of IPFS providers (node and gateway)
+   * @type {Map<string, IPFS.Base>}
+   */
   private providers: Map<'node' | 'gateway', IPFS.Base>;
 
   /**
@@ -93,7 +100,7 @@ export class IpfsService {
    * @throws {Error} When pinning fails or node provider is unavailable
    */
   async pin(CID: string, owner: IAuth.ICredentials.IWeb3.IEntity): Promise<any> {
-    return (this.providers.get('node') as IPFS.Node).pin(CID, owner);
+    return await (this.providers.get('node') as IPFS.Node).pin(CID, owner);
   }
 
   /**
@@ -106,7 +113,7 @@ export class IpfsService {
    * @throws {Error} When unpinning fails, content is not found, or user is unauthorized
    */
   async unpin(CID: string, owner: NewType): Promise<any> {
-    return (this.providers.get('node') as IPFS.Node).unpin(CID, owner);
+    return await (this.providers.get('node') as IPFS.Node).unpin(CID, owner);
   }
 
   /**
@@ -117,7 +124,7 @@ export class IpfsService {
    * @throws {Error} When node is unavailable or status cannot be retrieved
    */
   async getStatus(): Promise<any> {
-    return (this.providers.get('node') as IPFS.Node).getStatus();
+    return await (this.providers.get('node') as IPFS.Node).getStatus();
   }
 
   /**
@@ -129,7 +136,7 @@ export class IpfsService {
    * @throws {Error} When metadata cannot be retrieved or processed
    */
   async getMetadata(ipfsUrl: string): Promise<any> {
-    return (this.providers.get('gateway') as IPFS.Gateway).getMetadata(ipfsUrl);
+    return await (this.providers.get('gateway') as IPFS.Gateway).getMetadata(ipfsUrl);
   }
 
   /**
